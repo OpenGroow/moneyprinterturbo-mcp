@@ -6,12 +6,13 @@ import { env } from "./config.js";
 import { logger } from "./logger.js";
 
 const app = buildApp({
-  mcpApiKey: env.mcpApiKey,
+  projectsByKey: env.projectsByKey,
   mptBaseUrl: env.mptBaseUrl,
   mptApiKey: env.mptApiKey,
-  postizUrl: env.postizUrl,
-  postizApiKey: env.postizApiKey,
-  publicBaseUrl: env.publicBaseUrl,
+  postizApiUrl: env.postizApiUrl,
+  postizUploadUrl: env.postizUploadUrl,
+  postizToken: env.postizToken,
+  postizGroup: env.postizGroup,
 });
 
 const mcpCors = cors({

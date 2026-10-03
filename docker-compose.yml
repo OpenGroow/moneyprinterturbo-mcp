@@ -1,0 +1,53 @@
+# Stack de dev : MoneyPrinterTurbo (build local de ton fork) + ce serveur MCP.
+#
+#   docker compose up --build            # mpt-api + mcp
+#   docker compose --profile webui up    # + interface Streamlit MPT (:8501)
+#
+# MPT_DIR = repo MoneyPrinterTurbo (défaut : dossier voisin). Il est buildé puis
+# monté en volume : config.toml, storage/ et le code Python sont ceux du repo.
+
+x-mpt: &mpt
+  build:
+    context: ${MPT_DIR:-../MoneyPrinterTurbo}
+    args:
+      DOCKER_BUILD_MIRROR: default
+      PIP_USE_OFFICIAL: "1"
+  image: moneyprinterturbo-local
+  volumes:
+    - ${MPT_DIR:-../MoneyPrinterTurbo}:/MoneyPrinterTurbo
+
+services:
+  mpt-api:
+    <<: *mpt
+    command: ["python3", "main.py"]
+    ports:
+      - "127.0.0.1:8080:8080"
+    healthcheck:
+      test: ["CMD", "python3", "-c", "import urllib.request as u; u.urlopen('http://localhost:8080/docs')"]
+      interval: 10s
+      retries: 6
+
+  mpt-webui:
+    <<: *mpt
+    profiles: ["webui"]
+    ports:
+      - "127.0.0.1:8501:8501"
+
+  mcp:
+    build:
+      context: .
+      target: dev
+    env_file: .env
+    environment:
+      # Prime sur le .env (qui pointe localhost pour le mode "MCP sur l'hôte").
+      MPT_BASE_URL: http://mpt-api:8080
+      # Compose n'injecte pas une variable vide du .env ; le MCP l'exige (même vide).
+      MPT_API_KEY: ${MPT_API_KEY:-}
+      PORT: "4600"
+    ports:
+      - "127.0.0.1:4600:4600"
+    volumes:
+      - ./src:/app/src
+    depends_on:
+      mpt-api:
+        condition: service_healthy

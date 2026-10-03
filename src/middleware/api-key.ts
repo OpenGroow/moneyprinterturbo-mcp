@@ -1,21 +1,27 @@
 import { timingSafeEqual } from "node:crypto";
 import { createMiddleware } from "hono/factory";
+import type { Project } from "../projects.js";
 
-// Inbound bearer-key auth checked against a single env var (MCP_API_KEY) --
-// this repo has no DB, so there is no per-Project key to resolve, unlike
-// demo-video-mcp's DB-backed apiKeyMiddleware. Matches openmontage-mcp's
-// check_bearer (src/openmontage_mcp/auth.py): constant-time compare, same
-// Bearer shape.
-export function apiKeyMiddleware(expectedKey: string) {
+// Inbound bearer-key auth: one MCP_API_KEY_<NAME> per brand (see
+// projects.ts/config.ts) -- the key itself identifies which Project a
+// request is for, so handlers downstream (e.g. /publish) can read it via
+// c.get("project") instead of being told the brand some other way.
+export function projectApiKeyMiddleware(projectsByKey: Record<string, Project>) {
   return createMiddleware(async (c, next) => {
     const header = c.req.header("Authorization");
     if (!header?.startsWith("Bearer ")) {
       return c.json({ error: "Unauthorized" }, 401);
     }
     const provided = header.slice("Bearer ".length);
-    if (!constantTimeEqual(provided, expectedKey)) {
+
+    // Linear scan with a constant-time compare per entry: the key space is
+    // a handful of brands (code-level registry), not a DB of users, so
+    // there's no lookup-time side channel worth avoiding here.
+    const match = Object.entries(projectsByKey).find(([key]) => constantTimeEqual(provided, key));
+    if (!match) {
       return c.json({ error: "Unauthorized" }, 401);
     }
+    c.set("project", match[1]);
     await next();
   });
 }

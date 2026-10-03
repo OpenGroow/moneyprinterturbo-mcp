@@ -5,6 +5,7 @@ export function fakeMptClient(overrides: Partial<MptClient> = {}): MptClient {
     createVideo: async () => ({ taskId: "task-1" }),
     getTask: async () => null,
     resolveFinalFilePath: async () => null,
+    fetchFinalVideoBuffer: async () => null,
     ...overrides,
   } as unknown as MptClient;
 }
