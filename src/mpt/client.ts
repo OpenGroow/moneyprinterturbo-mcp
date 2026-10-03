@@ -147,4 +147,23 @@ export class MptClient {
     if (!uri) return null;
     return stripTaskUriPrefix(uri);
   }
+
+  // Same upstream call as GET /videos/:runId/final (routes/videos.ts), but
+  // buffered instead of streamed in passthrough: /publish needs the full
+  // bytes to multipart-upload to Postiz, routes/videos.ts only needs to
+  // relay a <video> tag's request.
+  async fetchFinalVideoBuffer(taskId: string): Promise<{ buffer: Buffer; contentType?: string } | null> {
+    const filePath = await this.resolveFinalFilePath(taskId);
+    if (!filePath) return null;
+
+    const res = await this.fetchImpl(`${this.baseUrl}/api/v1/stream/${filePath}`, {
+      headers: { "x-api-key": this.apiKey },
+    });
+    if (!res.ok) {
+      throw new MptClientError(res.status, `MoneyPrinterTurbo stream request failed with status ${res.status}`);
+    }
+    const buffer = Buffer.from(await res.arrayBuffer());
+    const contentType = res.headers.get("Content-Type") ?? undefined;
+    return { buffer, contentType };
+  }
 }

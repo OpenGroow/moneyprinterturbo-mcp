@@ -37,12 +37,12 @@ function callToolRequest(name: string, args: Record<string, unknown>): RequestIn
 
 function testApp(mptClient: MptClient = fakeMptClient()) {
   return buildApp({
-    mcpApiKey: "mcp-secret",
+    projectsByKey: { "mcp-secret": { name: "test-brand", postizChannelIds: {} } },
     mptBaseUrl: "http://mpt.local",
     mptApiKey: "mpt-secret",
-    postizUrl: "http://postiz.local",
-    postizApiKey: "postiz-secret",
-    publicBaseUrl: "http://localhost:4600",
+    postizApiUrl: "http://postiz.local/api/posts",
+    postizUploadUrl: "http://postiz.local/upload",
+    postizToken: "postiz-secret",
     mptClient,
   });
 }

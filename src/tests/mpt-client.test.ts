@@ -123,6 +123,65 @@ describe("MptClient.resolveFinalFilePath", () => {
   });
 });
 
+describe("MptClient.fetchFinalVideoBuffer", () => {
+  function fetchImplFor(filePath: string, streamResponse: { ok: boolean; status: number; body: Buffer; contentType?: string }) {
+    return vi.fn(async (url: string) => {
+      if (url.includes("/api/v1/tasks/")) {
+        return {
+          ok: true,
+          status: 200,
+          json: async () => ({ status: 200, data: { task_id: "task-1", state: 1, videos: [`/tasks/${filePath}`] } }),
+        };
+      }
+      return {
+        ok: streamResponse.ok,
+        status: streamResponse.status,
+        arrayBuffer: async () =>
+          streamResponse.body.buffer.slice(
+            streamResponse.body.byteOffset,
+            streamResponse.body.byteOffset + streamResponse.body.byteLength,
+          ),
+        headers: { get: (name: string) => (name === "Content-Type" ? streamResponse.contentType ?? null : null) },
+      };
+    }) as unknown as typeof fetch;
+  }
+
+  it("streams GET /api/v1/stream/{filePath} with x-api-key and buffers the body", async () => {
+    const fetchImpl = fetchImplFor("task-1/final-1.mp4", { ok: true, status: 200, body: Buffer.from("video-bytes"), contentType: "video/mp4" });
+    const client = new MptClient({ baseUrl: "http://mpt.local", apiKey: "secret", fetchImpl });
+
+    const video = await client.fetchFinalVideoBuffer("task-1");
+
+    expect(video).not.toBeNull();
+    expect(video!.buffer.toString()).toBe("video-bytes");
+    expect(video!.contentType).toBe("video/mp4");
+
+    const [url, init] = (fetchImpl as ReturnType<typeof vi.fn>).mock.calls[1] as [string, RequestInit];
+    expect(url).toBe("http://mpt.local/api/v1/stream/task-1/final-1.mp4");
+    expect((init.headers as Record<string, string>)["x-api-key"]).toBe("secret");
+  });
+
+  it("returns null when the task has no final video yet", async () => {
+    const fetchImpl = vi.fn(async () => ({
+      ok: true,
+      status: 200,
+      json: async () => ({ status: 200, data: { task_id: "task-1", state: 4, videos: [] } }),
+    })) as unknown as typeof fetch;
+    const client = new MptClient({ baseUrl: "http://mpt.local", apiKey: "secret", fetchImpl });
+
+    const video = await client.fetchFinalVideoBuffer("task-1");
+
+    expect(video).toBeNull();
+  });
+
+  it("throws MptClientError when the upstream stream request fails", async () => {
+    const fetchImpl = fetchImplFor("task-1/final-1.mp4", { ok: false, status: 502, body: Buffer.from("") });
+    const client = new MptClient({ baseUrl: "http://mpt.local", apiKey: "secret", fetchImpl });
+
+    await expect(client.fetchFinalVideoBuffer("task-1")).rejects.toThrow(MptClientError);
+  });
+});
+
 describe("stripTaskUriPrefix", () => {
   it("strips a bare /tasks/ prefix (no endpoint configured on MPT)", () => {
     expect(stripTaskUriPrefix("/tasks/task-1/final-1.mp4")).toBe("task-1/final-1.mp4");
