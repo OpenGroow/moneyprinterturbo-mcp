@@ -7,6 +7,7 @@ import { registerProduceVideoTools } from "./mcp/tools/produce-video.js";
 import { registerVideoRoutes } from "./routes/videos.js";
 import { registerPublishRoutes } from "./routes/publish.js";
 import { MptClient } from "./mpt/client.js";
+import { logger } from "./logger.js";
 import type { Project } from "./projects.js";
 
 // No env/config singleton is read in this module: every value buildApp
@@ -29,6 +30,11 @@ export function buildApp(deps: BuildAppDeps): Hono {
   const mptClient = deps.mptClient ?? new MptClient({ baseUrl: deps.mptBaseUrl, apiKey: deps.mptApiKey });
 
   const app = new Hono();
+
+  app.onError((err, c) => {
+    logger.error({ err, method: c.req.method, path: c.req.path }, "unhandled request error");
+    return c.json({ error: "internal_error" }, 500);
+  });
 
   // Public, unauthenticated: a <video src> tag can't send an Authorization
   // header. Guarded only by runId's unguessability (CONTEXT.md).

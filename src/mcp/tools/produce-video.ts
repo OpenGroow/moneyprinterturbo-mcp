@@ -1,6 +1,7 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { MptClient, MptClientError } from "../../mpt/client.js";
+import { logger } from "../../logger.js";
 import { errorContent, jsonContent } from "./result.js";
 
 // produce_video / get_run_status: the async produce/poll pair Megaclaw's
@@ -61,6 +62,7 @@ async function callMpt<T>(work: () => Promise<T>): Promise<T | ReturnType<typeof
   try {
     return await work();
   } catch (err) {
+    logger.error({ err }, "MPT tool call failed");
     if (err instanceof MptClientError) {
       return errorContent(err.category, err.message);
     }
