@@ -17,9 +17,19 @@ x-mpt: &mpt
     - ${MPT_DIR:-../MoneyPrinterTurbo}:/MoneyPrinterTurbo
 
 services:
+  # TTS utilisé par MPT (voice_name "kokoro:..."). Même image que demo-video-mcp, mais
+  # aucun port publié sur l'hôte (8880 est pris par celui de demo-video-mcp) : seul
+  # mpt-api l'appelle, par le réseau compose. Dans MoneyPrinterTurbo/config.toml :
+  #   [kokoro] base_url = "http://kokoro:8880/v1"
+  kokoro:
+    image: ghcr.io/remsky/kokoro-fastapi-cpu:latest
+    restart: unless-stopped
+
   mpt-api:
     <<: *mpt
     command: ["python3", "main.py"]
+    depends_on:
+      - kokoro
     ports:
       - "127.0.0.1:8080:8080"
     healthcheck:
