@@ -1,5 +1,6 @@
 import crypto from "node:crypto";
 import type { Hono } from "hono";
+import { logger } from "../logger.js";
 import type { MptClient } from "../mpt/client.js";
 import type { Project } from "../projects.js";
 import { buildPostizSettings, isPostizPlatform, type PostizPlatform } from "../postiz/settings.js";
@@ -105,6 +106,7 @@ async function scheduleOne(
     }
     return { platform, ok: true, id: body["id"] as string | undefined };
   } catch (err) {
+    logger.error({ err, platform }, "Postiz schedule failed");
     return { platform, ok: false, error: err instanceof Error ? err.message : String(err) };
   }
 }

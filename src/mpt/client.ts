@@ -98,10 +98,18 @@ export class MptClient {
   }
 
   private async request<T>(path: string, init?: RequestInit): Promise<{ res: Response; body: MptEnvelope<T> | undefined }> {
-    const res = await this.fetchImpl(`${this.baseUrl}${path}`, {
-      ...init,
-      headers: { ...this.headers(), ...(init?.headers as Record<string, string> | undefined) },
-    });
+    let res: Response;
+    try {
+      res = await this.fetchImpl(`${this.baseUrl}${path}`, {
+        ...init,
+        headers: { ...this.headers(), ...(init?.headers as Record<string, string> | undefined) },
+      });
+    } catch (err) {
+      // Node's fetch only says "fetch failed"; the real reason (ENOTFOUND,
+      // ECONNREFUSED...) is on `cause`.
+      const cause = err instanceof Error && err.cause instanceof Error ? err.cause.message : String(err);
+      throw new MptClientError(502, `MoneyPrinterTurbo unreachable at ${this.baseUrl}: ${cause}`);
+    }
     const body = (await res.json().catch(() => undefined)) as MptEnvelope<T> | undefined;
     return { res, body };
   }
