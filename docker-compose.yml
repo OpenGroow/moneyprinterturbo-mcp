@@ -53,6 +53,7 @@ services:
       MPT_BASE_URL: http://mpt-api:8080
       # Compose n'injecte pas une variable vide du .env ; le MCP l'exige (même vide).
       MPT_API_KEY: ${MPT_API_KEY:-}
+      MPT_DRY_RUN: ${MPT_DRY_RUN:-false}
       PORT: "4600"
     ports:
       - "127.0.0.1:4600:4600"

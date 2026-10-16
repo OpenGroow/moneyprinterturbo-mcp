@@ -22,6 +22,8 @@ const envSchema = z.object({
   PORT: z.coerce.number().default(4600),
   MPT_BASE_URL: z.string().min(1),
   MPT_API_KEY: z.string().default(""),
+  // Test mode: produce_video logs what it received and answers without calling MPT.
+  MPT_DRY_RUN: z.enum(["true", "false"]).default("false"),
   POSTIZ_TOKEN: z.string().min(1),
   POSTIZ_API_URL: z.string().min(1),
   POSTIZ_UPLOAD_URL: z.string().min(1),
@@ -51,6 +53,7 @@ export function loadEnv(raw: NodeJS.ProcessEnv = process.env) {
     port: e.PORT as number,
     mptBaseUrl: e.MPT_BASE_URL as string,
     mptApiKey: e.MPT_API_KEY as string,
+    mptDryRun: e.MPT_DRY_RUN === "true",
     postizToken: e.POSTIZ_TOKEN as string,
     postizApiUrl: e.POSTIZ_API_URL as string,
     postizUploadUrl: e.POSTIZ_UPLOAD_URL as string,
