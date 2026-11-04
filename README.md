@@ -21,7 +21,7 @@ Lance `mpt-api` (image officielle `ghcr.io/harry0703/moneyprinterturbo`) dans Do
 
 ### Stack locale personnelle
 
-`docker-compose.local.yml` (ignoré par git) peut ajouter des services à la stack. Pour qu'il soit chargé automatiquement, ajoute dans `.env` :
+`docker-compose.local.yml` (ignoré par git) peut ajouter des services ou remplacer l'image de MPT (par exemple pour construire un fork en local). Pour qu'il soit chargé automatiquement, ajoute dans `.env` :
 
 ```
 COMPOSE_FILE=docker-compose.yml:docker-compose.local.yml
@@ -30,6 +30,6 @@ COMPOSE_FILE=docker-compose.yml:docker-compose.local.yml
 ### Image MoneyPrinterTurbo
 
 - `MPT_IMAGE` dans `.env` choisit l'image (`.env.example` pointe vers l'officielle). Pour un fork publié ou un tag précis, change cette ligne.
-- Le provider vidéo `comfyui` (`video_source = "comfyui"`, `comfyui_api_key`) n'existe pas dans l'image officielle : il demande un fork. Pour builder le tien : `docker compose -f docker-compose.yml -f docker-compose.fork.yml up --build` (`MPT_DIR` = repo du fork, par défaut `../MoneyPrinterTurbo`).
+- Le provider vidéo `comfyui` (`video_source = "comfyui"`, `comfyui_api_key`) n'existe pas dans l'image officielle : il demande un fork publié ou construit en local (voir la stack locale ci-dessus).
 
 Autres scripts : `pnpm dev:infra:down` (arrête MPT), `pnpm webui` (interface Streamlit de MPT sur :8501), `pnpm dev:docker` (tout dans Docker, MCP compris).
