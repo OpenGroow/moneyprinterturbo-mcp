@@ -9,6 +9,7 @@ const app = buildApp({
   projectsByKey: env.projectsByKey,
   mptBaseUrl: env.mptBaseUrl,
   mptApiKey: env.mptApiKey,
+  mptDryRun: env.mptDryRun,
   postizApiUrl: env.postizApiUrl,
   postizUploadUrl: env.postizUploadUrl,
   postizToken: env.postizToken,

@@ -1,3 +1,4 @@
+import { randomUUID } from "node:crypto";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { MptClient, MptClientError } from "../../mpt/client.js";
@@ -13,6 +14,8 @@ import { errorContent, jsonContent } from "./result.js";
 
 export interface ProduceVideoDeps {
   mptClient: MptClient;
+  // When true, MPT is never called: produce_video logs its params and returns a fake runId.
+  dryRun?: boolean;
 }
 
 // A near-direct passthrough of MPT's own VideoParams (app/models/schema.py)
@@ -80,6 +83,12 @@ export function registerProduceVideoTools(server: McpServer, deps: ProduceVideoD
     },
     async (params) =>
       callMpt(async () => {
+        logger.info(
+          `produce_video received${deps.dryRun ? " (dry-run, MPT not called)" : ""}:\n${JSON.stringify(params, null, 2)}`,
+        );
+        if (deps.dryRun) {
+          return jsonContent({ runId: randomUUID(), status: "started", dryRun: true });
+        }
         const { taskId } = await deps.mptClient.createVideo(params);
         return jsonContent({ runId: taskId, status: "started" });
       }),
@@ -96,6 +105,9 @@ export function registerProduceVideoTools(server: McpServer, deps: ProduceVideoD
     },
     async ({ runId }) =>
       callMpt(async () => {
+        if (deps.dryRun) {
+          return jsonContent({ runId, status: "completed", dryRun: true });
+        }
         const task = await deps.mptClient.getTask(runId);
         if (!task) {
           return errorContent("not_found", "Run not found", { runId });

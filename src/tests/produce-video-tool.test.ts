@@ -7,9 +7,9 @@ import type { MptClient } from "../mpt/client.js";
 import { MptClientError } from "../mpt/client.js";
 import { fakeMptClient } from "./helpers/fake-mpt-client.js";
 
-async function connect(mptClient: MptClient) {
+async function connect(mptClient: MptClient, dryRun = false) {
   const server = new McpServer({ name: "moneyprinterturbo-mcp", version: "1.0.0" });
-  registerProduceVideoTools(server, { mptClient });
+  registerProduceVideoTools(server, { mptClient, dryRun });
   const [clientTransport, serverTransport] = InMemoryTransport.createLinkedPair();
   await server.connect(serverTransport);
   const client = new Client({ name: "test", version: "1.0" });
@@ -20,6 +20,25 @@ async function connect(mptClient: MptClient) {
 function parse(result: { content: Array<{ type: string; text: string }> }) {
   return JSON.parse(result.content[0]!.text);
 }
+
+describe("produce_video dry-run", () => {
+  it("answers without calling MPT", async () => {
+    const client = await connect(
+      fakeMptClient({
+        createVideo: async () => {
+          throw new Error("MPT must not be called");
+        },
+      }),
+      true,
+    );
+
+    const result = await client.callTool({ name: "produce_video", arguments: { video_subject: "cats" } });
+    const body = parse(result as never);
+
+    expect(body).toMatchObject({ status: "started", dryRun: true });
+    expect(body.runId).toMatch(/^[0-9a-f-]{36}$/);
+  });
+});
 
 describe("produce_video", () => {
   it("returns runId=taskId and status started as soon as MPT accepts the job", async () => {
