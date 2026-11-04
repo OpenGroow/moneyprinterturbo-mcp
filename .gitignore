@@ -10,3 +10,4 @@ dist/
 # MoneyPrinterTurbo (monté dans le conteneur)
 /config.toml
 /storage/
+/docker-compose.local.yml
