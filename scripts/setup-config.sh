@@ -1,28 +1,21 @@
 #!/bin/sh
 # Prépare ./config.toml, monté dans l'image MoneyPrinterTurbo.
-#   1. ./config.toml existe déjà          -> on le garde tel quel ;
-#   2. ../MoneyPrinterTurbo/config.toml   -> on le reprend (ton ancien setup) ;
-#   3. sinon                              -> config.example.toml du repo officiel.
-# Dans les cas 2 et 3, [kokoro] base_url est pointé vers le service compose
-# `kokoro` s'il vaut encore la valeur par défaut (127.0.0.1 désignerait le conteneur MPT).
+#   1. ./config.toml existe déjà  -> on le garde tel quel ;
+#   2. sinon                      -> config.example.toml du repo officiel.
+# Dans le cas 2, [kokoro] base_url est pointé vers le service compose `kokoro`
+# (127.0.0.1 désignerait le conteneur MPT lui-même).
 set -eu
 cd "$(dirname "$0")/.."
 
 UPSTREAM_EXAMPLE="https://raw.githubusercontent.com/harry0703/MoneyPrinterTurbo/main/config.example.toml"
-LEGACY="${MPT_DIR:-../MoneyPrinterTurbo}/config.toml"
 
 if [ -f config.toml ]; then
   echo "config.toml existe déjà : conservé."
   exit 0
 fi
 
-if [ -f "$LEGACY" ]; then
-  echo "config.toml repris depuis $LEGACY"
-  cp "$LEGACY" config.toml
-else
-  echo "config.toml téléchargé depuis le repo officiel MoneyPrinterTurbo"
-  curl -fsSL "$UPSTREAM_EXAMPLE" -o config.toml
-fi
+echo "config.toml téléchargé depuis le repo officiel MoneyPrinterTurbo"
+curl -fsSL "$UPSTREAM_EXAMPLE" -o config.toml
 
 awk '
   /^\[/ { in_kokoro = ($0 == "[kokoro]") }

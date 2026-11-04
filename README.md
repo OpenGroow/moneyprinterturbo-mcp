@@ -15,10 +15,9 @@ Lance `kokoro` (TTS) et `mpt-api` (image officielle `ghcr.io/harry0703/moneyprin
 1. `cp .env.example .env`, puis renseigner les clés (`MPT_BASE_URL` reste `http://localhost:8080` : le MCP tourne sur l'hôte).
 2. `pnpm dev` : `pnpm setup` prépare `config.toml` (monté dans le conteneur, jamais versionné car il contient des secrets) :
    - s'il existe déjà, il est conservé ;
-   - sinon, un `../MoneyPrinterTurbo/config.toml` existant est repris ;
    - sinon, le `config.example.toml` du repo officiel est téléchargé.
 
-   Dans les deux derniers cas, `[kokoro] base_url` est pointé vers `http://kokoro:8880/v1` (MPT tourne dans Docker, `127.0.0.1` y désignerait le conteneur lui-même). Il reste à renseigner tes clés dans `config.toml`.
+   Dans ce second cas, `[kokoro] base_url` est pointé vers `http://kokoro:8880/v1` (MPT tourne dans Docker, `127.0.0.1` y désignerait le conteneur lui-même). Il reste à renseigner tes clés dans `config.toml`.
 
 ### Image MoneyPrinterTurbo
 
