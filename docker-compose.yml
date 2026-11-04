@@ -30,9 +30,8 @@ services:
       MPT_BASE_URL: http://mpt-api:8080
       MPT_API_KEY: ${MPT_API_KEY:-}
       MPT_DRY_RUN: ${MPT_DRY_RUN:-false}
-      PORT: "4600"
     ports:
-      - "127.0.0.1:4600:4600"
+      - "127.0.0.1:${PORT:?copy .env.example to .env}:${PORT}"
     volumes:
       - ./src:/app/src
     depends_on:
