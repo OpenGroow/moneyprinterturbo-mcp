@@ -1,0 +1,16 @@
+# Surcharge optionnelle : build local d'un fork de MoneyPrinterTurbo (ex. provider ComfyUI)
+# au lieu de l'image officielle.
+#
+#   docker compose -f docker-compose.yml -f docker-compose.fork.yml up --build
+#
+# MPT_DIR = repo du fork (défaut : dossier voisin).
+services:
+  mpt-api:
+    build:
+      context: ${MPT_DIR:-../MoneyPrinterTurbo}
+      args:
+        DOCKER_BUILD_MIRROR: default
+        PIP_USE_OFFICIAL: "1"
+    image: moneyprinterturbo-local
+  mpt-webui:
+    image: moneyprinterturbo-local
