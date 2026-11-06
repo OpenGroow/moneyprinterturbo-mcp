@@ -19,6 +19,7 @@ export interface BuildAppDeps {
   mptBaseUrl: string;
   mptApiKey: string;
   mptDryRun?: boolean;
+  maxClips?: number;
   publicBaseUrl?: string;
   postizApiUrl: string;
   postizUploadUrl: string;
@@ -62,6 +63,7 @@ export function buildApp(deps: BuildAppDeps): Hono {
     registerProduceVideoTools(mcpServer, {
       mptClient,
       dryRun: deps.mptDryRun,
+      maxClips: deps.maxClips,
       publicBaseUrl: deps.publicBaseUrl,
     });
 

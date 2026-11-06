@@ -17,6 +17,9 @@ export interface ProduceVideoDeps {
   mptClient: MptClient;
   // When true, MPT is never called: produce_video logs its params and returns a fake runId.
   dryRun?: boolean;
+  // Caps video_terms to this many entries (MPT_MAX_CLIPS). MPT generates one
+  // ComfyUI clip per term, so 1 means a single clip: a cheap, fast test run.
+  maxClips?: number;
   // Public origin of this server (the one a browser and Postiz can reach, for
   // example a tunnel). get_video builds the video URL from it; unset, get_video
   // answers a not_configured error and every other tool is unaffected.
@@ -84,6 +87,15 @@ export function finalVideoUrl(publicBaseUrl: string, runId: string): string {
   return `${stripTrailingSlash(publicBaseUrl)}/videos/${encodeURIComponent(runId)}/final`;
 }
 
+export function capVideoTerms(
+  terms: string | string[] | undefined,
+  maxClips: number | undefined,
+): string | string[] | undefined {
+  if (terms === undefined || maxClips === undefined) return terms;
+  const list = Array.isArray(terms) ? terms : terms.split(",").map((t) => t.trim()).filter(Boolean);
+  return list.slice(0, maxClips);
+}
+
 export function registerProduceVideoTools(server: McpServer, deps: ProduceVideoDeps) {
   server.registerTool(
     "produce_video",
@@ -92,8 +104,19 @@ export function registerProduceVideoTools(server: McpServer, deps: ProduceVideoD
         "Produces a short-form reel from a subject (and optionally a full script) via MoneyPrinterTurbo. Returns immediately with a runId; poll get_run_status(runId) until status is completed or failed.",
       inputSchema: produceVideoShape,
     },
-    async (params) =>
+    async (rawParams) =>
       callMpt(async () => {
+        const params = { ...rawParams };
+        if (deps.maxClips !== undefined) {
+          if (rawParams.video_terms === undefined) {
+            logger.warn(
+              `MPT_MAX_CLIPS=${deps.maxClips} ignored: no video_terms given, MPT will pick its own terms`,
+            );
+          } else {
+            params.video_terms = capVideoTerms(rawParams.video_terms, deps.maxClips);
+            logger.info(`video_terms capped to ${deps.maxClips} (MPT_MAX_CLIPS)`);
+          }
+        }
         logger.info(
           `produce_video received${deps.dryRun ? " (dry-run, MPT not called)" : ""}:\n${JSON.stringify(params, null, 2)}`,
         );

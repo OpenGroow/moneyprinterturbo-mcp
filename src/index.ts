@@ -10,6 +10,7 @@ const app = buildApp({
   mptBaseUrl: env.mptBaseUrl,
   mptApiKey: env.mptApiKey,
   mptDryRun: env.mptDryRun,
+  maxClips: env.maxClips,
   publicBaseUrl: env.publicBaseUrl,
   postizApiUrl: env.postizApiUrl,
   postizUploadUrl: env.postizUploadUrl,
