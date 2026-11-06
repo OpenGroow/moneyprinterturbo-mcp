@@ -12,7 +12,8 @@ Agent OpenGroow ──MCP (POST /mcp)──▶ moneyprinterturbo-mcp ──HTTP�
 
 - `POST /mcp` : serveur MCP (streamable HTTP, sans session : un appel = une requête). Outils :
   - `produce_video` : lance la production d'un reel à partir d'un sujet (et éventuellement d'un script) et renvoie tout de suite un `runId` ;
-  - `get_run_status` : statut du `runId` (`pending`, `running`, `completed`, `failed`).
+  - `get_run_status` : statut du `runId` (`pending`, `running`, `completed`, `failed`) ;
+  - `get_video` : une fois le run `completed`, renvoie `{ runId, videoUrl }`, l'URL publique de la vidéo finale (`<PUBLIC_BASE_URL>/videos/<runId>/final`). `PUBLIC_BASE_URL` est l'adresse de ce serveur joignable par un navigateur et par Postiz (un tunnel en local) ; sans elle, `get_video` répond une erreur `not_configured`.
 - `GET /videos/:runId/final` : la vidéo finale, lisible dans une balise `<video>`.
 - `POST /publish` : publie le reel produit sur Postiz.
 - `GET /health` : vérification de santé.

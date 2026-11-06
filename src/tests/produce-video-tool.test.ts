@@ -7,9 +7,9 @@ import type { MptClient } from "../mpt/client.js";
 import { MptClientError } from "../mpt/client.js";
 import { fakeMptClient } from "./helpers/fake-mpt-client.js";
 
-async function connect(mptClient: MptClient, dryRun = false) {
+async function connect(mptClient: MptClient, dryRun = false, publicBaseUrl?: string) {
   const server = new McpServer({ name: "moneyprinterturbo-mcp", version: "1.0.0" });
-  registerProduceVideoTools(server, { mptClient, dryRun });
+  registerProduceVideoTools(server, { mptClient, dryRun, publicBaseUrl });
   const [clientTransport, serverTransport] = InMemoryTransport.createLinkedPair();
   await server.connect(serverTransport);
   const client = new Client({ name: "test", version: "1.0" });
@@ -142,5 +142,85 @@ describe("get_run_status", () => {
 
     expect(result.isError).toBe(true);
     expect(parse(result as never)).toMatchObject({ errorCategory: "not_found" });
+  });
+});
+
+describe("get_video", () => {
+  const RUN = "11111111-1111-4111-8111-111111111111";
+  const call = (client: Awaited<ReturnType<typeof connect>>) =>
+    client.callTool({ name: "get_video", arguments: { runId: RUN } });
+
+  it("returns the public URL of the final video of a completed run", async () => {
+    const client = await connect(
+      fakeMptClient({ getTask: async (taskId) => ({ taskId, status: "completed", videos: ["http://mpt/tasks/x/final-1.mp4"] }) }),
+      false,
+      "https://mcp.example.com/",
+    );
+
+    expect(parse((await call(client)) as never)).toEqual({
+      runId: RUN,
+      videoUrl: `https://mcp.example.com/videos/${RUN}/final`,
+    });
+  });
+
+  it.each(["pending", "running", "failed"] as const)("is not_ready while the run is %s", async (status) => {
+    const client = await connect(
+      fakeMptClient({ getTask: async (taskId) => ({ taskId, status, videos: [] }) }),
+      false,
+      "https://mcp.example.com",
+    );
+
+    const result = await call(client);
+
+    expect(result.isError).toBe(true);
+    expect(parse(result as never)).toMatchObject({ errorCategory: "not_ready" });
+  });
+
+  it("is not_ready when the run completed without a video file", async () => {
+    const client = await connect(
+      fakeMptClient({ getTask: async (taskId) => ({ taskId, status: "completed", videos: [] }) }),
+      false,
+      "https://mcp.example.com",
+    );
+
+    expect(parse((await call(client)) as never)).toMatchObject({ errorCategory: "not_ready" });
+  });
+
+  it("returns not_found for an unknown run", async () => {
+    const client = await connect(fakeMptClient({ getTask: async () => null }), false, "https://mcp.example.com");
+
+    expect(parse((await call(client)) as never)).toMatchObject({ errorCategory: "not_found" });
+  });
+
+  it("answers not_configured without PUBLIC_BASE_URL, without calling MPT", async () => {
+    const client = await connect(
+      fakeMptClient({
+        getTask: async () => {
+          throw new Error("MPT must not be called");
+        },
+      }),
+    );
+
+    const result = await call(client);
+
+    expect(result.isError).toBe(true);
+    expect(parse(result as never)).toMatchObject({ errorCategory: "not_configured" });
+  });
+
+  it("answers in dry-run without calling MPT", async () => {
+    const client = await connect(
+      fakeMptClient({
+        getTask: async () => {
+          throw new Error("MPT must not be called");
+        },
+      }),
+      true,
+      "https://mcp.example.com",
+    );
+
+    expect(parse((await call(client)) as never)).toMatchObject({
+      videoUrl: `https://mcp.example.com/videos/${RUN}/final`,
+      dryRun: true,
+    });
   });
 });

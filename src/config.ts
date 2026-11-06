@@ -24,6 +24,8 @@ const envSchema = z.object({
   MPT_API_KEY: z.string().default(""),
   // Test mode: produce_video logs what it received and answers without calling MPT.
   MPT_DRY_RUN: z.enum(["true", "false"]).default("false"),
+  // Public origin of this server, for get_video's URL (a tunnel when local).
+  PUBLIC_BASE_URL: z.string().url().optional(),
   POSTIZ_TOKEN: z.string().min(1),
   POSTIZ_API_URL: z.string().min(1),
   POSTIZ_UPLOAD_URL: z.string().min(1),
@@ -54,6 +56,7 @@ export function loadEnv(raw: NodeJS.ProcessEnv = process.env) {
     mptBaseUrl: e.MPT_BASE_URL as string,
     mptApiKey: e.MPT_API_KEY as string,
     mptDryRun: e.MPT_DRY_RUN === "true",
+    publicBaseUrl: e.PUBLIC_BASE_URL as string | undefined,
     postizToken: e.POSTIZ_TOKEN as string,
     postizApiUrl: e.POSTIZ_API_URL as string,
     postizUploadUrl: e.POSTIZ_UPLOAD_URL as string,
