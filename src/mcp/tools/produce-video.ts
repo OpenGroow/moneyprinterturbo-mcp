@@ -26,9 +26,8 @@ export interface ProduceVideoDeps {
   defaultVideoSource?: string;
   defaultVoiceName?: string;
   // Public origin of this server (the one a browser and a publisher can reach, for
-  // example a tunnel). get_video builds the video URL from it; unset, get_video
-  // answers a not_configured error and every other tool is unaffected.
-  publicBaseUrl?: string;
+  // example a tunnel). get_video builds the video URL from it.
+  publicBaseUrl: string;
 }
 
 // A near-direct passthrough of MPT's own VideoParams (app/models/schema.py)
@@ -173,16 +172,10 @@ export function registerProduceVideoTools(server: McpServer, deps: ProduceVideoD
     "get_project_status",
     {
       description:
-        "Reports whether this server can serve a run: { configured: true }, or { configured: false, message } when MoneyPrinterTurbo is unreachable or PUBLIC_BASE_URL is not set.",
+        "Reports whether this server can serve a run: { configured: true }, or { configured: false, message } when MoneyPrinterTurbo is unreachable.",
     },
     async () => {
       if (deps.dryRun) return jsonContent({ configured: true, dryRun: true });
-      if (!deps.publicBaseUrl) {
-        return jsonContent({
-          configured: false,
-          message: "PUBLIC_BASE_URL is not set on moneyprinterturbo-mcp: get_video cannot return a public video URL.",
-        });
-      }
       try {
         // An unknown task answers 404 (null): enough to know MoneyPrinterTurbo is reachable.
         await deps.mptClient.getTask(randomUUID());
@@ -205,9 +198,6 @@ export function registerProduceVideoTools(server: McpServer, deps: ProduceVideoD
     },
     async ({ runId }) =>
       callMpt(async () => {
-        if (!deps.publicBaseUrl) {
-          return errorContent("not_configured", "PUBLIC_BASE_URL is not set: cannot build a public video URL");
-        }
         if (deps.dryRun) {
           return jsonContent({ runId, videoUrl: finalVideoUrl(deps.publicBaseUrl, runId), dryRun: true });
         }

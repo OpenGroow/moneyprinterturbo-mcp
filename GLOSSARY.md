@@ -52,7 +52,7 @@ but on the OpenGroow side.
   translates the status (see above).
 - `get_project_status` — the activation check of the Template (`statusCheck`):
   `{ configured: true }`, or `{ configured: false, message }` when MPT is
-  unreachable or `PUBLIC_BASE_URL` is unset. A wrong key is refused before it.
+  unreachable. A wrong key is refused before it.
 - `get_video(runId)` — once the run is `completed`, returns
   `{ runId, videoUrl }`, the public URL of the final video.
 
