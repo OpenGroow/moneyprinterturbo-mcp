@@ -5,7 +5,6 @@ import { projectApiKeyMiddleware } from "./middleware/api-key.js";
 import { hostAllowlistMiddleware } from "./middleware/host-allowlist.js";
 import { registerProduceVideoTools } from "./mcp/tools/produce-video.js";
 import { registerVideoRoutes } from "./routes/videos.js";
-import { registerPublishRoutes } from "./routes/publish.js";
 import { MptClient } from "./mpt/client.js";
 import { logger } from "./logger.js";
 import type { Project } from "./projects.js";
@@ -21,10 +20,6 @@ export interface BuildAppDeps {
   mptDryRun?: boolean;
   maxClips?: number;
   publicBaseUrl?: string;
-  postizApiUrl: string;
-  postizUploadUrl: string;
-  postizToken: string;
-  postizGroup?: string;
   // Injected by tests; production always drives the real MPT instance.
   mptClient?: MptClient;
 }
@@ -44,17 +39,6 @@ export function buildApp(deps: BuildAppDeps): Hono {
   registerVideoRoutes(app, { mptClient, mptBaseUrl: deps.mptBaseUrl, mptApiKey: deps.mptApiKey });
 
   app.get("/health", (c) => c.json({ status: "ok" }));
-
-  // Same per-project key space for /publish and /mcp -- see projects.ts:
-  // the key a request authenticates with IS the brand it's acting for.
-  app.use("/publish", projectApiKeyMiddleware(deps.projectsByKey));
-  registerPublishRoutes(app, {
-    mptClient,
-    postizApiUrl: deps.postizApiUrl,
-    postizUploadUrl: deps.postizUploadUrl,
-    postizToken: deps.postizToken,
-    postizGroup: deps.postizGroup,
-  });
 
   app.use("/mcp", hostAllowlistMiddleware());
   app.use("/mcp", projectApiKeyMiddleware(deps.projectsByKey));

@@ -20,7 +20,7 @@ export interface ProduceVideoDeps {
   // Caps video_terms to this many entries (MPT_MAX_CLIPS). MPT generates one
   // ComfyUI clip per term, so 1 means a single clip: a cheap, fast test run.
   maxClips?: number;
-  // Public origin of this server (the one a browser and Postiz can reach, for
+  // Public origin of this server (the one a browser and a publisher can reach, for
   // example a tunnel). get_video builds the video URL from it; unset, get_video
   // answers a not_configured error and every other tool is unaffected.
   publicBaseUrl?: string;
@@ -160,7 +160,7 @@ export function registerProduceVideoTools(server: McpServer, deps: ProduceVideoD
     "get_video",
     {
       description:
-        "Returns the public URL of the final video of a completed run started by produce_video: { runId, videoUrl }. Call it once get_run_status reports completed. The URL must be reachable by a browser and by Postiz.",
+        "Returns the public URL of the final video of a completed run started by produce_video: { runId, videoUrl }. Call it once get_run_status reports completed. The URL is publicly reachable, so it can be handed to a publisher.",
       inputSchema: {
         runId: z.string().uuid(),
       },

@@ -3,8 +3,8 @@ import { Hono } from "hono";
 import { projectApiKeyMiddleware } from "../middleware/api-key.js";
 import type { Project } from "../projects.js";
 
-const LOVEYOUMAKE: Project = { name: "loveyoumake", postizChannelIds: { instagram: "ig-1" } };
-const REZON: Project = { name: "rezon", postizChannelIds: { instagram: "ig-2" } };
+const LOVEYOUMAKE: Project = { name: "loveyoumake" };
+const REZON: Project = { name: "rezon" };
 
 function appWithProjects(projectsByKey: Record<string, Project>) {
   const app = new Hono();

@@ -37,12 +37,9 @@ function callToolRequest(name: string, args: Record<string, unknown>): RequestIn
 
 function testApp(mptClient: MptClient = fakeMptClient()) {
   return buildApp({
-    projectsByKey: { "mcp-secret": { name: "test-brand", postizChannelIds: {} } },
+    projectsByKey: { "mcp-secret": { name: "test-brand" } },
     mptBaseUrl: "http://mpt.local",
     mptApiKey: "mpt-secret",
-    postizApiUrl: "http://postiz.local/api/posts",
-    postizUploadUrl: "http://postiz.local/upload",
-    postizToken: "postiz-secret",
     mptClient,
   });
 }
@@ -114,17 +111,5 @@ describe("GET /health", () => {
 
     expect(res.status).toBe(200);
     expect(await res.json()).toEqual({ status: "ok" });
-  });
-});
-
-describe("POST /publish", () => {
-  it("requires the MCP bearer key when reached through the full app", async () => {
-    const res = await testApp().request("/publish", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ run_id: "task-1" }),
-    });
-
-    expect(res.status).toBe(401);
   });
 });

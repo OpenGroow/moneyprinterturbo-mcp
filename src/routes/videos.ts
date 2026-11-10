@@ -3,7 +3,7 @@ import type { MptClient } from "../mpt/client.js";
 import { stripTrailingSlash } from "../util.js";
 
 // GET /videos/:runId/final -- serves the rendered reel so the Megaclaw
-// dashboard's <video src> (and Postiz, via /publish) can fetch it by URL.
+// dashboard's <video src> (or any downstream publisher) can fetch it by URL.
 // PUBLIC/unauthenticated (see CONTEXT.md): a plain <video> tag can't send an
 // Authorization header, so the only guard is runId being an unguessable
 // MPT task_id. Proxies server-to-server to MPT's own GET
