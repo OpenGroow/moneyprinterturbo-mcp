@@ -11,6 +11,8 @@ const app = buildApp({
   mptApiKey: env.mptApiKey,
   mptDryRun: env.mptDryRun,
   maxClips: env.maxClips,
+  defaultVideoSource: env.defaultVideoSource,
+  defaultVoiceName: env.defaultVoiceName,
   publicBaseUrl: env.publicBaseUrl,
 });
 

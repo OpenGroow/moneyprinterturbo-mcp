@@ -19,6 +19,8 @@ export interface BuildAppDeps {
   mptApiKey: string;
   mptDryRun?: boolean;
   maxClips?: number;
+  defaultVideoSource?: string;
+  defaultVoiceName?: string;
   publicBaseUrl?: string;
   // Injected by tests; production always drives the real MPT instance.
   mptClient?: MptClient;
@@ -48,6 +50,8 @@ export function buildApp(deps: BuildAppDeps): Hono {
       mptClient,
       dryRun: deps.mptDryRun,
       maxClips: deps.maxClips,
+      defaultVideoSource: deps.defaultVideoSource,
+      defaultVoiceName: deps.defaultVoiceName,
       publicBaseUrl: deps.publicBaseUrl,
     });
 

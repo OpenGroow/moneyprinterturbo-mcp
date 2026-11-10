@@ -22,6 +22,9 @@ const envSchema = z.object({
     (v) => (v === "" ? undefined : v),
     z.coerce.number().int().positive().optional(),
   ),
+  // Defaults for produce_video when the caller omits the field.
+  MPT_DEFAULT_VIDEO_SOURCE: z.preprocess((v) => (v === "" ? undefined : v), z.string().optional()),
+  MPT_DEFAULT_VOICE_NAME: z.preprocess((v) => (v === "" ? undefined : v), z.string().optional()),
   // Public origin of this server, for get_video's URL (a tunnel when local).
   PUBLIC_BASE_URL: z.preprocess((v) => (v === "" ? undefined : v), z.string().url().optional()),
   MCP_PROJECTS: z.string().default("default"),
@@ -59,6 +62,8 @@ export function loadEnv(raw: NodeJS.ProcessEnv = process.env) {
     mptApiKey: e.MPT_API_KEY as string,
     mptDryRun: e.MPT_DRY_RUN === "true",
     maxClips: e.MPT_MAX_CLIPS as number | undefined,
+    defaultVideoSource: e.MPT_DEFAULT_VIDEO_SOURCE as string | undefined,
+    defaultVoiceName: e.MPT_DEFAULT_VOICE_NAME as string | undefined,
     publicBaseUrl: e.PUBLIC_BASE_URL as string | undefined,
     projectsByKey,
   };

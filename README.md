@@ -44,6 +44,7 @@ pnpm dev
 1. **`.env`** : renseigne les clés. `PORT`, `MPT_IMAGE` et `MPT_BASE_URL` ont une valeur dans `.env.example` ; dans le conteneur Docker, `MPT_BASE_URL` est remplacé par `http://mpt-api:8080`.
    - `MCP_API_KEY_<NOM>` : une clé par marque de `MCP_PROJECTS` ;
    - `MPT_MAX_CLIPS=1` : plafonne `video_terms` à N termes ; MPT génère un clip ComfyUI par terme, donc 1 = un seul clip (test rapide). Sans effet si `video_terms` n'est pas fourni à `produce_video`.
+   - `MPT_DEFAULT_VIDEO_SOURCE` / `MPT_DEFAULT_VOICE_NAME` : valeurs appliquées par `produce_video` quand l'appelant ne les fournit pas (par exemple `comfyui` et une voix Kokoro avec un fork de MPT) ; sans elles, MPT applique ses propres défauts ;
    - `MPT_DRY_RUN=true` : `produce_video` logue ses paramètres et répond sans appeler MPT, `get_run_status` répond `completed`. Utile pour tester un flow sans dépenser de crédits.
 2. **`config.toml`** : la configuration de MoneyPrinterTurbo (clés LLM, TTS, banques de médias), montée dans le conteneur. `pnpm dev` le prépare via `pnpm setup` :
    - s'il existe déjà, il est conservé ;

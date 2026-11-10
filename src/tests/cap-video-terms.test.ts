@@ -78,3 +78,39 @@ describe("MPT_MAX_CLIPS env parsing", () => {
     expect(() => loadEnv({ ...base, MPT_MAX_CLIPS: "abc" })).toThrow();
   });
 });
+
+describe("produce_video defaults", () => {
+  async function run(deps: { defaultVideoSource?: string; defaultVoiceName?: string }, args: Record<string, unknown>) {
+    const sent: Array<Record<string, unknown>> = [];
+    const server = new McpServer({ name: "t", version: "1.0.0" });
+    registerProduceVideoTools(server, {
+      mptClient: fakeMptClient({
+        createVideo: async (p: never) => {
+          sent.push(p);
+          return { taskId: "task-1" };
+        },
+      }),
+      ...deps,
+    });
+    const client = new Client({ name: "c", version: "1.0.0" });
+    const [a, b] = InMemoryTransport.createLinkedPair();
+    await Promise.all([server.connect(a), client.connect(b)]);
+    await client.callTool({ name: "produce_video", arguments: { video_subject: "s", ...args } });
+    return sent[0]!;
+  }
+
+  it("fills video_source and voice_name when the caller omits them", async () => {
+    const sent = await run({ defaultVideoSource: "comfyui", defaultVoiceName: "v" }, {});
+    expect(sent.video_source).toBe("comfyui");
+    expect(sent.voice_name).toBe("v");
+  });
+  it("never overrides what the caller sent", async () => {
+    const sent = await run({ defaultVideoSource: "comfyui" }, { video_source: "pexels" });
+    expect(sent.video_source).toBe("pexels");
+  });
+  it("sends nothing extra without defaults", async () => {
+    const sent = await run({}, {});
+    expect(sent.video_source).toBeUndefined();
+    expect(sent.voice_name).toBeUndefined();
+  });
+});
