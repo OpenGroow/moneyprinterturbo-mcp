@@ -64,7 +64,7 @@ describe("produce_video with maxClips", () => {
 describe("MPT_MAX_CLIPS env parsing", () => {
   const base: NodeJS.ProcessEnv = {
     MPT_BASE_URL: "http://mpt",
-    MCP_API_KEY_DEFAULT: "key-default",
+    MCP_API_KEY: "key",
   };
   it("parses a positive integer", () => {
     expect(loadEnv({ ...base, MPT_MAX_CLIPS: "2" }).maxClips).toBe(2);

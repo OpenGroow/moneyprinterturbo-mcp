@@ -15,7 +15,7 @@ Agent OpenGroow ──MCP (POST /mcp)──▶ moneyprinterturbo-mcp ──HTTP�
 - `GET /videos/:runId/final` : la vidéo finale, lisible dans une balise `<video>`.
 - `GET /health` : vérification de santé.
 
-`/mcp` s'authentifie par `Authorization: Bearer <clé>`. Il y a une clé par marque (`MCP_API_KEY_<NOM>`) : la clé utilisée identifie la marque. Les marques sont listées dans `MCP_PROJECTS` (noms séparés par des virgules, `default` par défaut).
+`/mcp` s'authentifie par `Authorization: Bearer <clé>`. La clé est `MCP_API_KEY`.
 
 ## Utilisation avec OpenGroow
 
@@ -24,7 +24,7 @@ OpenGroow décrit ses agents par des Templates, publiés sur [GroowHub](https://
 Ce serveur n'est pas embarqué dans le Template : tu le fais tourner toi-même, et le Template pointe vers lui.
 
 1. Lance ce serveur (voir ci-dessous) et note son URL : `http://<hôte>:<PORT>/mcp`. Depuis le conteneur OpenClaw d'OpenGroow, l'hôte est `host.docker.internal` (les Host `localhost`, `127.0.0.1`, `[::1]` et `host.docker.internal` sont les seuls acceptés).
-2. Déclare une clé pour la marque dans `.env` (`MCP_API_KEY_<NOM>`).
+2. Déclare une clé dans `.env` (`MCP_API_KEY`).
 3. Dans le Template, déclare le serveur MCP avec cette URL, et donne la clé à l'agent comme secret. Voir le guide [Template development](https://github.com/OpenGroow/OpenGroow/blob/main/docs/TEMPLATE_DEVELOPMENT.md) d'OpenGroow pour le format exact.
 
 ## Démarrage
@@ -42,7 +42,7 @@ pnpm dev
 ### Configuration
 
 1. **`.env`** : renseigne les clés. `PORT`, `MPT_IMAGE` et `MPT_BASE_URL` ont une valeur dans `.env.example` ; dans le conteneur Docker, `MPT_BASE_URL` est remplacé par `http://mpt-api:8080`.
-   - `MCP_API_KEY_<NOM>` : une clé par marque de `MCP_PROJECTS` ;
+   - `MCP_API_KEY` : la clé bearer de `/mcp` ;
    - `MPT_MAX_CLIPS=1` : plafonne `video_terms` à N termes ; MPT génère un clip ComfyUI par terme, donc 1 = un seul clip (test rapide). Sans effet si `video_terms` n'est pas fourni à `produce_video`.
    - `MPT_DEFAULT_VIDEO_SOURCE` / `MPT_DEFAULT_VOICE_NAME` : valeurs appliquées par `produce_video` quand l'appelant ne les fournit pas (par exemple `comfyui` et une voix Kokoro avec un fork de MPT) ; sans elles, MPT applique ses propres défauts ;
    - `MPT_DRY_RUN=true` : `produce_video` logue ses paramètres et répond sans appeler MPT, `get_run_status` répond `completed`. Utile pour tester un flow sans dépenser de crédits.

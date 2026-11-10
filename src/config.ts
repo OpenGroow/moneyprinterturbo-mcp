@@ -1,15 +1,12 @@
 import { z } from "zod";
-import type { Project } from "./projects.js";
 
 // This server has no internal infrastructure of its own (no DB, no
 // pipeline) -- every env var here is a credential/address for a system it
-// calls: the per-project keys and the already-running MPT instance
+// calls: the bearer key and the already-running MPT instance
 // it drives. MPT_API_KEY is optional (MPT only enforces it when its own
 // config.toml sets `api_key`; defaults to "").
 //
-// There is no single MCP_API_KEY: one MCP_API_KEY_<NAME> per brand listed in
-// MCP_PROJECTS (comma-separated, default "default"), for /mcp -- the key
-// itself identifies the brand.
+// MCP_API_KEY is the bearer key that protects /mcp (one key, no per-caller config).
 
 const envSchema = z.object({
   PORT: z.coerce.number().default(4600),
@@ -27,12 +24,8 @@ const envSchema = z.object({
   MPT_DEFAULT_VOICE_NAME: z.preprocess((v) => (v === "" ? undefined : v), z.string().optional()),
   // Public origin of this server, for get_video's URL (a tunnel when local).
   PUBLIC_BASE_URL: z.preprocess((v) => (v === "" ? undefined : v), z.string().url().optional()),
-  MCP_PROJECTS: z.string().default("default"),
+  MCP_API_KEY: z.string().min(1),
 });
-
-export function projectKeyEnvVarName(projectName: string): string {
-  return `MCP_API_KEY_${projectName.toUpperCase()}`;
-}
 
 export function loadEnv(raw: NodeJS.ProcessEnv = process.env) {
   const parsed = envSchema.safeParse(raw);
@@ -41,20 +34,6 @@ export function loadEnv(raw: NodeJS.ProcessEnv = process.env) {
     throw new Error(`Invalid environment variables: ${issues}`);
   }
   const e = parsed.data as Record<string, string | number | undefined>;
-
-  const names = (e.MCP_PROJECTS as string)
-    .split(",")
-    .map((n) => n.trim().toLowerCase())
-    .filter(Boolean);
-  if (names.length === 0) throw new Error("Invalid environment variables: MCP_PROJECTS: no project name");
-
-  const projectsByKey: Record<string, Project> = {};
-  for (const name of names) {
-    const varName = projectKeyEnvVarName(name);
-    const key = raw[varName];
-    if (!key) throw new Error(`Invalid environment variables: ${varName}: required (project "${name}")`);
-    projectsByKey[key] = { name };
-  }
 
   return {
     port: e.PORT as number,
@@ -65,7 +44,7 @@ export function loadEnv(raw: NodeJS.ProcessEnv = process.env) {
     defaultVideoSource: e.MPT_DEFAULT_VIDEO_SOURCE as string | undefined,
     defaultVoiceName: e.MPT_DEFAULT_VOICE_NAME as string | undefined,
     publicBaseUrl: e.PUBLIC_BASE_URL as string | undefined,
-    projectsByKey,
+    apiKey: e.MCP_API_KEY as string,
   };
 }
 

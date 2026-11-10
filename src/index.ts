@@ -6,7 +6,7 @@ import { env } from "./config.js";
 import { logger } from "./logger.js";
 
 const app = buildApp({
-  projectsByKey: env.projectsByKey,
+  apiKey: env.apiKey,
   mptBaseUrl: env.mptBaseUrl,
   mptApiKey: env.mptApiKey,
   mptDryRun: env.mptDryRun,

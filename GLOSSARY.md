@@ -39,12 +39,10 @@ fusionnés ensuite. Ce serveur force `video_count=1` : un `produce_video` = une
 vidéo finale, pour garder `/videos/{runId}/final` et le résultat de
 `get_run_status` singuliers.
 
-**Project**
-Une marque qui appelle ce serveur — pas un tenant avec sa propre config
-étendue. Les noms sont listés dans `MCP_PROJECTS` (non secret) ; pas de DB, pas
-de dashboard. Chaque Project a sa propre clé bearer (`MCP_API_KEY_<NAME>`, en
-env — c'est le secret) pour `/mcp` : la clé *est* l'identité du Project. La
-publication n'est pas faite ici, mais côté OpenGroow.
+**Clé d'API**
+Une seule clé bearer (`MCP_API_KEY`, en env) protège `/mcp`. Le serveur n'a pas de
+configuration par appelant : pas de DB, pas de dashboard. La publication n'est
+pas faite ici, mais côté OpenGroow.
 
 ## Contrat MCP exposé à OpenGroow
 
@@ -62,6 +60,5 @@ publication n'est pas faite ici, mais côté OpenGroow.
   de l'uuid), sert le fichier en proxysant l'appel serveur-à-serveur vers MPT
   (`stream`/`download`) avec la clé MPT (`x-api-key`) : cette clé ne fuite
   jamais vers le navigateur du reviewer.
-- `/mcp` — authentifiée par la clé de Project (voir ci-dessus) ; la
-  génération vidéo elle-même est agnostique de la marque.
+- `/mcp` — authentifiée par `MCP_API_KEY`.
 - `/health` — exemptée d'auth.
