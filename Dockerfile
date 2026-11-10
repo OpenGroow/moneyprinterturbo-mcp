@@ -4,7 +4,7 @@ WORKDIR /app
 RUN corepack enable
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 
-# --- dev : toutes les deps, code monté en volume, hot-reload via tsx watch
+# --- dev: all deps, code mounted as a volume, hot reload via tsx watch
 FROM base AS dev
 RUN pnpm install --frozen-lockfile
 COPY tsconfig.json ./

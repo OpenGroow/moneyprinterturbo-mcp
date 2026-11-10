@@ -1,64 +1,63 @@
-# Contexte : moneyprinterturbo-mcp
+# Context: moneyprinterturbo-mcp
 
-Glossaire du domaine pour l'adaptateur MCP qui expose MoneyPrinterTurbo (MPT)
-à OpenGroow. Ce fichier est un glossaire, pas une spec d'implémentation.
+Domain glossary for the MCP adapter that exposes MoneyPrinterTurbo (MPT)
+to OpenGroow. This file is a glossary, not an implementation spec.
 
-## Termes
+## Terms
 
 **Reel**
-Le court métrage vertical/horizontal produit par un appel à `produce_video`.
-Un appel = un reel = une vidéo finale unique (voir *video_count* ci-dessous).
+The short vertical/horizontal film produced by one `produce_video` call.
+One call = one reel = one single final video (see *video_count* below).
 
 **MPT (MoneyPrinterTurbo)**
-Le moteur de génération sous-jacent. Déployé et géré indépendamment de ce
-serveur (son propre Docker, sa propre configuration de clés LLM/TTS/stock
-footage) — jamais vendorisé ni importé. Ce serveur ne fait que l'appeler en
-HTTP, comme un client de son API `/api/v1/*`.
+The underlying generation engine. Deployed and managed independently of this
+server (its own Docker, its own LLM/TTS/stock-footage key configuration) —
+never vendored or imported. This server only calls it over HTTP, as a client
+of its `/api/v1/*` API.
 
 **Run**
-L'unité de travail asynchrone identifiée par `runId`. Ce serveur ne tient
-aucun état de run : `runId` *est* le `task_id` renvoyé par MPT sur
-`POST /api/v1/videos`, et `get_run_status` interroge MPT en direct
-(`GET /api/v1/tasks/{runId}`) à chaque appel plutôt que de lire un store local.
+The asynchronous unit of work identified by `runId`. This server keeps no
+run state: `runId` *is* the `task_id` returned by MPT on
+`POST /api/v1/videos`, and `get_run_status` queries MPT live
+(`GET /api/v1/tasks/{runId}`) on every call instead of reading a local store.
 
-**Statut de run**
-`pending` / `running` / `completed` / `failed`, traduit depuis le `state`
-numérique de MPT :
+**Run status**
+`pending` / `running` / `completed` / `failed`, translated from MPT's numeric
+`state`:
 - `TASK_STATE_PROCESSING (4)` → `running`
 - `TASK_STATE_COMPLETE (1)` → `completed`
 - `TASK_STATE_FAILED (-1)` → `failed`
-- `pending` n'est jamais produit par ce serveur : une tâche MPT est déjà
-  `processing` au moment où `POST /api/v1/videos` répond, donc `runId` n'est
-  remis à l'appelant qu'une fois le run déjà en cours.
+- `pending` is never produced by this server: an MPT task is already
+  `processing` by the time `POST /api/v1/videos` answers, so `runId` is only
+  handed to the caller once the run is already underway.
 
 **video_count**
-Paramètre natif de MPT contrôlant le nombre de *variantes finales
-indépendantes* produites par une même tâche (même script/narration/audio,
-montage visuel différent à chaque variante) — ce ne sont pas des clips
-fusionnés ensuite. Ce serveur force `video_count=1` : un `produce_video` = une
-vidéo finale, pour garder `/videos/{runId}/final` et le résultat de
-`get_run_status` singuliers.
+A native MPT parameter controlling the number of *independent final variants*
+produced by one task (same script/narration/audio, different visual editing
+for each variant) — they are not clips merged afterwards. This server forces
+`video_count=1`: one `produce_video` = one final video, so that
+`/videos/{runId}/final` and the result of `get_run_status` stay singular.
 
-**Clé d'API**
-Une seule clé bearer (`MCP_API_KEY`, en env) protège `/mcp`. Le serveur n'a pas de
-configuration par appelant : pas de DB, pas de dashboard. La publication n'est
-pas faite ici, mais côté OpenGroow.
+**API key**
+A single bearer key (`MCP_API_KEY`, in env) protects `/mcp`. The server has no
+per-caller configuration: no DB, no dashboard. Publishing is not done here,
+but on the OpenGroow side.
 
-## Contrat MCP exposé à OpenGroow
+## MCP contract exposed to OpenGroow
 
-- `produce_video` — passthrough quasi-direct du schéma `VideoParams` de MPT
-  (sujet, script optionnel, voix, format, etc.), appelle `POST /api/v1/videos`,
-  renvoie `{ runId }`.
-- `get_run_status(runId)` — proxy live vers `GET /api/v1/tasks/{runId}`,
-  traduit le statut (voir ci-dessus).
-- `get_video(runId)` — une fois le run `completed`, renvoie
-  `{ runId, videoUrl }`, l'URL publique de la vidéo finale.
+- `produce_video` — an almost direct passthrough of MPT's `VideoParams` schema
+  (subject, optional script, voice, aspect, etc.), calls
+  `POST /api/v1/videos`, returns `{ runId }`.
+- `get_run_status(runId)` — live proxy to `GET /api/v1/tasks/{runId}`,
+  translates the status (see above).
+- `get_video(runId)` — once the run is `completed`, returns
+  `{ runId, videoUrl }`, the public URL of the final video.
 
-## Routes HTTP
+## HTTP routes
 
-- `/videos/{runId}/final` — exemptée d'auth (protégée par l'imprévisibilité
-  de l'uuid), sert le fichier en proxysant l'appel serveur-à-serveur vers MPT
-  (`stream`/`download`) avec la clé MPT (`x-api-key`) : cette clé ne fuite
-  jamais vers le navigateur du reviewer.
-- `/mcp` — authentifiée par `MCP_API_KEY`.
-- `/health` — exemptée d'auth.
+- `/videos/{runId}/final` — exempt from auth (protected by the
+  unguessability of the uuid), serves the file by proxying the server-to-server
+  call to MPT (`stream`/`download`) with the MPT key (`x-api-key`): this key
+  never leaks to the reviewer's browser.
+- `/mcp` — authenticated by `MCP_API_KEY`.
+- `/health` — exempt from auth.
