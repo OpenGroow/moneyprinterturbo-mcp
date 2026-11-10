@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { PROJECTS, type Project } from "./projects.js";
+import type { Project } from "./projects.js";
 
 // This server has no internal infrastructure of its own (no DB, no
 // pipeline) -- every env var here is a credential/address for a system it
@@ -7,12 +7,9 @@ import { PROJECTS, type Project } from "./projects.js";
 // it drives. MPT_API_KEY is optional (MPT only enforces it when its own
 // config.toml sets `api_key`; defaults to "").
 //
-// There is no single MCP_API_KEY: one MCP_API_KEY_<NAME> per brand in
-// projects.ts's PROJECTS registry (uppercased name), for /mcp -- the key
+// There is no single MCP_API_KEY: one MCP_API_KEY_<NAME> per brand listed in
+// MCP_PROJECTS (comma-separated, default "default"), for /mcp -- the key
 // itself identifies the brand.
-const projectKeyEnvVars = Object.fromEntries(
-  Object.keys(PROJECTS).map((name) => [projectKeyEnvVarName(name), z.string().min(1)]),
-);
 
 const envSchema = z.object({
   PORT: z.coerce.number().default(4600),
@@ -27,7 +24,7 @@ const envSchema = z.object({
   ),
   // Public origin of this server, for get_video's URL (a tunnel when local).
   PUBLIC_BASE_URL: z.preprocess((v) => (v === "" ? undefined : v), z.string().url().optional()),
-  ...projectKeyEnvVars,
+  MCP_PROJECTS: z.string().default("default"),
 });
 
 export function projectKeyEnvVarName(projectName: string): string {
@@ -42,10 +39,18 @@ export function loadEnv(raw: NodeJS.ProcessEnv = process.env) {
   }
   const e = parsed.data as Record<string, string | number | undefined>;
 
+  const names = (e.MCP_PROJECTS as string)
+    .split(",")
+    .map((n) => n.trim().toLowerCase())
+    .filter(Boolean);
+  if (names.length === 0) throw new Error("Invalid environment variables: MCP_PROJECTS: no project name");
+
   const projectsByKey: Record<string, Project> = {};
-  for (const [name, project] of Object.entries(PROJECTS)) {
-    const key = e[projectKeyEnvVarName(name)] as string;
-    projectsByKey[key] = project;
+  for (const name of names) {
+    const varName = projectKeyEnvVarName(name);
+    const key = raw[varName];
+    if (!key) throw new Error(`Invalid environment variables: ${varName}: required (project "${name}")`);
+    projectsByKey[key] = { name };
   }
 
   return {

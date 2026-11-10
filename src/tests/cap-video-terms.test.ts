@@ -5,7 +5,6 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { capVideoTerms, registerProduceVideoTools } from "../mcp/tools/produce-video.js";
 import { fakeMptClient } from "./helpers/fake-mpt-client.js";
 import { loadEnv } from "../config.js";
-import { PROJECTS } from "../projects.js";
 
 describe("capVideoTerms", () => {
   it("keeps only the first N terms of an array", () => {
@@ -65,7 +64,7 @@ describe("produce_video with maxClips", () => {
 describe("MPT_MAX_CLIPS env parsing", () => {
   const base: NodeJS.ProcessEnv = {
     MPT_BASE_URL: "http://mpt",
-    ...Object.fromEntries(Object.keys(PROJECTS).map((n) => [`MCP_API_KEY_${n.toUpperCase()}`, `key-${n}`])),
+    MCP_API_KEY_DEFAULT: "key-default",
   };
   it("parses a positive integer", () => {
     expect(loadEnv({ ...base, MPT_MAX_CLIPS: "2" }).maxClips).toBe(2);

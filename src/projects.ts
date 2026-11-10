@@ -1,12 +1,7 @@
-// Static, code-level project registry: no DB, no dashboard. A "project"
-// here is a brand calling this server; its bearer key is a secret and lives
-// in env as MCP_API_KEY_<NAME> (see config.ts). Onboarding a new brand means
-// adding an entry here plus its env var.
+// A "project" is a brand calling this server. Its bearer key is a secret and
+// lives in env as MCP_API_KEY_<NAME>; the names themselves come from
+// MCP_PROJECTS (comma-separated, see config.ts). Onboarding a brand means
+// adding its name to MCP_PROJECTS plus its key.
 export interface Project {
   name: string;
 }
-
-export const PROJECTS: Record<string, Project> = {
-  loveyoumake: { name: "loveyoumake" },
-  rezon: { name: "rezon" },
-};
