@@ -12,6 +12,7 @@ OpenGroow Agent ──MCP (POST /mcp)──▶ moneyprinterturbo-mcp ──HTTP�
   - `produce_video`: starts producing a reel from a subject (and optionally a script) and returns a `runId` right away;
   - `get_run_status`: status of the `runId` (`pending`, `running`, `completed`, `failed`);
   - `get_video`: once the run is `completed`, returns `{ runId, videoUrl }`, the public URL of the final video (`<PUBLIC_BASE_URL>/videos/<runId>/final`). `PUBLIC_BASE_URL` is the address of this server reachable from the outside (a tunnel when running locally); without it, `get_video` answers a `not_configured` error.
+  - `get_project_status`: called by OpenGroow when an Agent is activated, with the Agent's key. A wrong key gets a 401, so the activation fails; with the right key it answers `{ configured: true }`, or `{ configured: false, message }` when MoneyPrinterTurbo is unreachable or `PUBLIC_BASE_URL` is not set.
 - `GET /videos/:runId/final`: the final video, playable in a `<video>` tag.
 - `GET /health`: health check.
 
