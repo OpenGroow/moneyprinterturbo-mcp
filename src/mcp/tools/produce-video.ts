@@ -167,6 +167,33 @@ export function registerProduceVideoTools(server: McpServer, deps: ProduceVideoD
       }),
   );
 
+  // Called by OpenGroow when an Agent is activated (the Template's `statusCheck`), with the Agent's key: a wrong
+  // key never reaches this tool (401), and `configured: false` keeps the Agent in error with the message.
+  server.registerTool(
+    "get_project_status",
+    {
+      description:
+        "Reports whether this server can serve a run: { configured: true }, or { configured: false, message } when MoneyPrinterTurbo is unreachable or PUBLIC_BASE_URL is not set.",
+    },
+    async () => {
+      if (deps.dryRun) return jsonContent({ configured: true, dryRun: true });
+      if (!deps.publicBaseUrl) {
+        return jsonContent({
+          configured: false,
+          message: "PUBLIC_BASE_URL is not set on moneyprinterturbo-mcp: get_video cannot return a public video URL.",
+        });
+      }
+      try {
+        // An unknown task answers 404 (null): enough to know MoneyPrinterTurbo is reachable.
+        await deps.mptClient.getTask(randomUUID());
+      } catch (err) {
+        if (err instanceof MptClientError) return jsonContent({ configured: false, message: err.message });
+        throw err;
+      }
+      return jsonContent({ configured: true });
+    },
+  );
+
   server.registerTool(
     "get_video",
     {
