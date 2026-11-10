@@ -12,10 +12,6 @@ const app = buildApp({
   mptDryRun: env.mptDryRun,
   maxClips: env.maxClips,
   publicBaseUrl: env.publicBaseUrl,
-  postizApiUrl: env.postizApiUrl,
-  postizUploadUrl: env.postizUploadUrl,
-  postizToken: env.postizToken,
-  postizGroup: env.postizGroup,
 });
 
 const mcpCors = cors({

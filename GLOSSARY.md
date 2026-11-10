@@ -42,14 +42,13 @@ vidéo finale, pour garder `/videos/{job_id}/final` et le résultat de
 `get_job_status` singuliers.
 
 **Project**
-Une marque qui publie via le compte Postiz partagé de ce serveur
-(Loveyoumake, Rezon, ...) — pas un tenant avec sa propre config étendue
-comme dans seo-mcp/demo-video-mcp/carousel-mcp. Registre statique dans
-`src/projects.ts` (non secret : nom + channel IDs Postiz par plateforme) ;
-pas de DB, pas de dashboard. Chaque Project a sa propre clé bearer
-(`MCP_API_KEY_<NAME>`, en env — c'est le secret), qui sert à la fois pour
-`/mcp` et `/publish` : la clé *est* l'identité du Project, donc Megaclaw
-n'a jamais besoin de dire explicitement pour quelle marque il agit.
+Une marque qui appelle ce serveur (Loveyoumake, Rezon, ...) — pas un
+tenant avec sa propre config étendue comme dans
+seo-mcp/demo-video-mcp/carousel-mcp. Registre statique dans
+`src/projects.ts` (non secret : le nom) ; pas de DB, pas de dashboard.
+Chaque Project a sa propre clé bearer (`MCP_API_KEY_<NAME>`, en env — c'est
+le secret) pour `/mcp` : la clé *est* l'identité du Project. La
+publication n'est plus faite ici, mais côté OpenGroow.
 
 ## Contrat MCP exposé à Megaclaw
 
@@ -66,17 +65,6 @@ n'a jamais besoin de dire explicitement pour quelle marque il agit.
   de l'uuid), sert le fichier en proxysant l'appel serveur-à-serveur vers MPT
   (`stream`/`download`) avec la clé MPT (`x-api-key`) : cette clé ne fuite
   jamais vers le navigateur du reviewer.
-- `/publish` — pousse le reel fini vers Postiz, authentifiée par la clé du
-  Project (voir ci-dessus). Contrat réel de Postiz (upload multipart puis
-  schedule avec `integration.id`), pas le contrat à plat d'openmontage-mcp.
-  Le compte/token Postiz (`POSTIZ_TOKEN`/`POSTIZ_API_URL`/`POSTIZ_UPLOAD_URL`)
-  est partagé avec les autres serveurs MCP (demo-video-mcp, carousel-mcp,
-  seo-mcp — même instance Postiz) ; le `channelId` par plateforme est résolu
-  depuis le Project authentifié (`src/projects.ts`), jamais passé par
-  l'appelant. Body `{run_id, caption, platforms: ["instagram", "tiktok"]}`.
-  Réponse `{results: [{platform, ok, id|error}]}` — un échec sur une
-  plateforme ne bloque pas les autres.
-- `/mcp` — même authentification par clé de Project (voir ci-dessus) ; la
-  génération vidéo elle-même (`create_reel`/`get_job_status`) est agnostique
-  de la marque, seule `/publish` lit `project.postizChannelIds`.
+- `/mcp` — authentifiée par la clé de Project (voir ci-dessus) ; la
+  génération vidéo elle-même est agnostique de la marque.
 - `/health` — exemptée d'auth.

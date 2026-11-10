@@ -65,9 +65,6 @@ describe("produce_video with maxClips", () => {
 describe("MPT_MAX_CLIPS env parsing", () => {
   const base: NodeJS.ProcessEnv = {
     MPT_BASE_URL: "http://mpt",
-    POSTIZ_TOKEN: "t",
-    POSTIZ_API_URL: "http://p",
-    POSTIZ_UPLOAD_URL: "http://p/u",
     ...Object.fromEntries(Object.keys(PROJECTS).map((n) => [`MCP_API_KEY_${n.toUpperCase()}`, `key-${n}`])),
   };
   it("parses a positive integer", () => {

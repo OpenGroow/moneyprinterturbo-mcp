@@ -3,17 +3,13 @@ import { PROJECTS, type Project } from "./projects.js";
 
 // This server has no internal infrastructure of its own (no DB, no
 // pipeline) -- every env var here is a credential/address for a system it
-// calls: Megaclaw's own per-project keys, the already-running MPT instance
-// it drives, and Postiz for /publish. All required at boot except
-// MPT_API_KEY (MPT only enforces it when its own config.toml sets
-// `api_key`; defaults to "") and POSTIZ_GROUP (non-secret, omitted from the
-// schedule payload if unset).
+// calls: the per-project keys and the already-running MPT instance
+// it drives. MPT_API_KEY is optional (MPT only enforces it when its own
+// config.toml sets `api_key`; defaults to "").
 //
 // There is no single MCP_API_KEY: one MCP_API_KEY_<NAME> per brand in
-// projects.ts's PROJECTS registry (uppercased name), for both /mcp and
-// /publish -- the key itself identifies the brand, so Megaclaw never needs
-// to tell this server which Postiz channel a reel belongs to (see
-// CONTEXT.md).
+// projects.ts's PROJECTS registry (uppercased name), for /mcp -- the key
+// itself identifies the brand.
 const projectKeyEnvVars = Object.fromEntries(
   Object.keys(PROJECTS).map((name) => [projectKeyEnvVarName(name), z.string().min(1)]),
 );
@@ -31,10 +27,6 @@ const envSchema = z.object({
   ),
   // Public origin of this server, for get_video's URL (a tunnel when local).
   PUBLIC_BASE_URL: z.preprocess((v) => (v === "" ? undefined : v), z.string().url().optional()),
-  POSTIZ_TOKEN: z.string().min(1),
-  POSTIZ_API_URL: z.string().min(1),
-  POSTIZ_UPLOAD_URL: z.string().min(1),
-  POSTIZ_GROUP: z.string().min(1).optional(),
   ...projectKeyEnvVars,
 });
 
@@ -63,10 +55,6 @@ export function loadEnv(raw: NodeJS.ProcessEnv = process.env) {
     mptDryRun: e.MPT_DRY_RUN === "true",
     maxClips: e.MPT_MAX_CLIPS as number | undefined,
     publicBaseUrl: e.PUBLIC_BASE_URL as string | undefined,
-    postizToken: e.POSTIZ_TOKEN as string,
-    postizApiUrl: e.POSTIZ_API_URL as string,
-    postizUploadUrl: e.POSTIZ_UPLOAD_URL as string,
-    postizGroup: e.POSTIZ_GROUP as string | undefined,
     projectsByKey,
   };
 }

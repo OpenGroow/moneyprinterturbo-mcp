@@ -1,24 +1,21 @@
 # moneyprinterturbo-mcp
 
-Adaptateur MCP/HTTP devant [MoneyPrinterTurbo](https://github.com/harry0703/MoneyPrinterTurbo) (MPT), conçu pour fonctionner avec [OpenGroow](https://github.com/OpenGroow/OpenGroow). Il expose la génération de vidéos courtes de MPT comme outils MCP à un agent, et publie le résultat via [Postiz](https://postiz.com). Vocabulaire du domaine : `GLOSSARY.md`.
+Adaptateur MCP/HTTP devant [MoneyPrinterTurbo](https://github.com/harry0703/MoneyPrinterTurbo) (MPT), conçu pour fonctionner avec [OpenGroow](https://github.com/OpenGroow/OpenGroow). Il expose la génération de vidéos courtes de MPT comme outils MCP à un agent ; la publication est faite côté OpenGroow, à partir de l'URL renvoyée par `get_video`. Vocabulaire du domaine : `GLOSSARY.md`.
 
 ## Fonctionnement
 
 ```
 Agent OpenGroow ──MCP (POST /mcp)──▶ moneyprinterturbo-mcp ──HTTP──▶ MoneyPrinterTurbo
-                                            │
-                                            └──POST /publish──▶ Postiz
 ```
 
 - `POST /mcp` : serveur MCP (streamable HTTP, sans session : un appel = une requête). Outils :
   - `produce_video` : lance la production d'un reel à partir d'un sujet (et éventuellement d'un script) et renvoie tout de suite un `runId` ;
   - `get_run_status` : statut du `runId` (`pending`, `running`, `completed`, `failed`) ;
-  - `get_video` : une fois le run `completed`, renvoie `{ runId, videoUrl }`, l'URL publique de la vidéo finale (`<PUBLIC_BASE_URL>/videos/<runId>/final`). `PUBLIC_BASE_URL` est l'adresse de ce serveur joignable par un navigateur et par Postiz (un tunnel en local) ; sans elle, `get_video` répond une erreur `not_configured`.
+  - `get_video` : une fois le run `completed`, renvoie `{ runId, videoUrl }`, l'URL publique de la vidéo finale (`<PUBLIC_BASE_URL>/videos/<runId>/final`). `PUBLIC_BASE_URL` est l'adresse de ce serveur joignable depuis l'extérieur (un tunnel en local) ; sans elle, `get_video` répond une erreur `not_configured`.
 - `GET /videos/:runId/final` : la vidéo finale, lisible dans une balise `<video>`.
-- `POST /publish` : publie le reel produit sur Postiz.
 - `GET /health` : vérification de santé.
 
-`/mcp` et `/publish` s'authentifient par `Authorization: Bearer <clé>`. Il y a une clé par marque (`MCP_API_KEY_<NOM>`) : la clé utilisée identifie la marque, donc le canal Postiz visé. Les marques sont déclarées dans `src/projects.ts`.
+`/mcp` s'authentifie par `Authorization: Bearer <clé>`. Il y a une clé par marque (`MCP_API_KEY_<NOM>`) : la clé utilisée identifie la marque. Les marques sont déclarées dans `src/projects.ts`.
 
 ## Utilisation avec OpenGroow
 
@@ -46,7 +43,6 @@ pnpm dev
 
 1. **`.env`** : renseigne les clés. `PORT`, `MPT_IMAGE` et `MPT_BASE_URL` ont une valeur dans `.env.example` ; dans le conteneur Docker, `MPT_BASE_URL` est remplacé par `http://mpt-api:8080`.
    - `MCP_API_KEY_<NOM>` : une clé par marque de `src/projects.ts` ;
-   - `POSTIZ_TOKEN`, `POSTIZ_API_URL`, `POSTIZ_UPLOAD_URL` : requis au démarrage, même si tu n'utilises pas `/publish` ;
    - `MPT_MAX_CLIPS=1` : plafonne `video_terms` à N termes ; MPT génère un clip ComfyUI par terme, donc 1 = un seul clip (test rapide). Sans effet si `video_terms` n'est pas fourni à `produce_video`.
    - `MPT_DRY_RUN=true` : `produce_video` logue ses paramètres et répond sans appeler MPT, `get_run_status` répond `completed`. Utile pour tester un flow sans dépenser de crédits.
 2. **`config.toml`** : la configuration de MoneyPrinterTurbo (clés LLM, TTS, banques de médias), montée dans le conteneur. `pnpm dev` le prépare via `pnpm setup` :
