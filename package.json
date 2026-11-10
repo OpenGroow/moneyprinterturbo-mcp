@@ -5,10 +5,11 @@
   "packageManager": "pnpm@11.9.0",
   "scripts": {
     "dev": "pnpm dev:infra && pnpm dev:local",
-    "dev:infra": "docker compose up -d --build --wait mpt-api",
+    "setup": "sh scripts/setup-config.sh",
+    "dev:infra": "pnpm setup && docker compose up -d --wait mpt-api",
     "dev:infra:down": "docker compose stop mpt-api mpt-webui",
     "dev:local": "tsx watch src/index.ts",
-    "dev:docker": "docker compose up --build",
+    "dev:docker": "pnpm setup && docker compose up --build",
     "dev:docker:down": "docker compose down",
     "webui": "docker compose --profile webui up -d mpt-webui",
     "build": "tsc -p tsconfig.json",

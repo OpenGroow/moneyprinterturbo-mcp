@@ -1,35 +1,13 @@
-# Stack de dev : MoneyPrinterTurbo (build local de ton fork) + ce serveur MCP.
-#
-#   docker compose up --build            # mpt-api + mcp
-#   docker compose --profile webui up    # + interface Streamlit MPT (:8501)
-#
-# MPT_DIR = repo MoneyPrinterTurbo (défaut : dossier voisin). Il est buildé puis
-# monté en volume : config.toml, storage/ et le code Python sont ceux du repo.
-
 x-mpt: &mpt
-  build:
-    context: ${MPT_DIR:-../MoneyPrinterTurbo}
-    args:
-      DOCKER_BUILD_MIRROR: default
-      PIP_USE_OFFICIAL: "1"
-  image: moneyprinterturbo-local
+  image: ${MPT_IMAGE:?copy .env.example to .env}
   volumes:
-    - ${MPT_DIR:-../MoneyPrinterTurbo}:/MoneyPrinterTurbo
+    - ./config.toml:/MoneyPrinterTurbo/config.toml
+    - ./storage:/MoneyPrinterTurbo/storage
 
 services:
-  # TTS utilisé par MPT (voice_name "kokoro:..."). Même image que demo-video-mcp, mais
-  # aucun port publié sur l'hôte (8880 est pris par celui de demo-video-mcp) : seul
-  # mpt-api l'appelle, par le réseau compose. Dans MoneyPrinterTurbo/config.toml :
-  #   [kokoro] base_url = "http://kokoro:8880/v1"
-  kokoro:
-    image: ghcr.io/remsky/kokoro-fastapi-cpu:latest
-    restart: unless-stopped
-
   mpt-api:
     <<: *mpt
     command: ["python3", "main.py"]
-    depends_on:
-      - kokoro
     ports:
       - "127.0.0.1:8080:8080"
     healthcheck:
@@ -49,14 +27,11 @@ services:
       target: dev
     env_file: .env
     environment:
-      # Prime sur le .env (qui pointe localhost pour le mode "MCP sur l'hôte").
       MPT_BASE_URL: http://mpt-api:8080
-      # Compose n'injecte pas une variable vide du .env ; le MCP l'exige (même vide).
       MPT_API_KEY: ${MPT_API_KEY:-}
       MPT_DRY_RUN: ${MPT_DRY_RUN:-false}
-      PORT: "4600"
     ports:
-      - "127.0.0.1:4600:4600"
+      - "127.0.0.1:${PORT:?copy .env.example to .env}:${PORT}"
     volumes:
       - ./src:/app/src
     depends_on:

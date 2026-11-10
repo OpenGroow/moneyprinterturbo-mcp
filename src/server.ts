@@ -19,6 +19,8 @@ export interface BuildAppDeps {
   mptBaseUrl: string;
   mptApiKey: string;
   mptDryRun?: boolean;
+  maxClips?: number;
+  publicBaseUrl?: string;
   postizApiUrl: string;
   postizUploadUrl: string;
   postizToken: string;
@@ -58,7 +60,12 @@ export function buildApp(deps: BuildAppDeps): Hono {
   app.use("/mcp", projectApiKeyMiddleware(deps.projectsByKey));
   app.post("/mcp", async (c) => {
     const mcpServer = new McpServer({ name: "moneyprinterturbo-mcp", version: "1.0.0" });
-    registerProduceVideoTools(mcpServer, { mptClient, dryRun: deps.mptDryRun });
+    registerProduceVideoTools(mcpServer, {
+      mptClient,
+      dryRun: deps.mptDryRun,
+      maxClips: deps.maxClips,
+      publicBaseUrl: deps.publicBaseUrl,
+    });
 
     // Megaclaw's generic MCP client makes a single stateless POST per tool
     // call -- no prior `initialize` handshake, no Mcp-Session-Id -- so a
