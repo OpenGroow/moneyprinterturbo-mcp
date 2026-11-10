@@ -40,6 +40,7 @@ function testApp(mptClient: MptClient = fakeMptClient()) {
     apiKey: "mcp-secret",
     mptBaseUrl: "http://mpt.local",
     mptApiKey: "mpt-secret",
+    publicBaseUrl: "https://mcp.example.com",
     mptClient,
   });
 }

@@ -7,7 +7,7 @@ import type { MptClient } from "../mpt/client.js";
 import { MptClientError } from "../mpt/client.js";
 import { fakeMptClient } from "./helpers/fake-mpt-client.js";
 
-async function connect(mptClient: MptClient, dryRun = false, publicBaseUrl?: string) {
+async function connect(mptClient: MptClient, dryRun = false, publicBaseUrl = "https://mcp.example.com") {
   const server = new McpServer({ name: "moneyprinterturbo-mcp", version: "1.0.0" });
   registerProduceVideoTools(server, { mptClient, dryRun, publicBaseUrl });
   const [clientTransport, serverTransport] = InMemoryTransport.createLinkedPair();
@@ -190,21 +190,6 @@ describe("get_video", () => {
     const client = await connect(fakeMptClient({ getTask: async () => null }), false, "https://mcp.example.com");
 
     expect(parse((await call(client)) as never)).toMatchObject({ errorCategory: "not_found" });
-  });
-
-  it("answers not_configured without PUBLIC_BASE_URL, without calling MPT", async () => {
-    const client = await connect(
-      fakeMptClient({
-        getTask: async () => {
-          throw new Error("MPT must not be called");
-        },
-      }),
-    );
-
-    const result = await call(client);
-
-    expect(result.isError).toBe(true);
-    expect(parse(result as never)).toMatchObject({ errorCategory: "not_configured" });
   });
 
   it("answers in dry-run without calling MPT", async () => {

@@ -37,6 +37,7 @@ async function callProduce(maxClips: number | undefined, args: Record<string, un
       },
     }),
     maxClips,
+    publicBaseUrl: "https://mcp.example.com",
   });
   const [ct, st] = InMemoryTransport.createLinkedPair();
   await server.connect(st);
@@ -90,6 +91,7 @@ describe("produce_video defaults", () => {
           return { taskId: "task-1" };
         },
       }),
+      publicBaseUrl: "https://mcp.example.com",
       ...deps,
     });
     const client = new Client({ name: "c", version: "1.0.0" });

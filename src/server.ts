@@ -20,7 +20,7 @@ export interface BuildAppDeps {
   maxClips?: number;
   defaultVideoSource?: string;
   defaultVoiceName?: string;
-  publicBaseUrl?: string;
+  publicBaseUrl: string;
   // Injected by tests; production always drives the real MPT instance.
   mptClient?: MptClient;
 }
