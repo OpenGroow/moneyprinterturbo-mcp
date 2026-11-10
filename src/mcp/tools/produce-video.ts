@@ -20,6 +20,11 @@ export interface ProduceVideoDeps {
   // Caps video_terms to this many entries (MPT_MAX_CLIPS). MPT generates one
   // ComfyUI clip per term, so 1 means a single clip: a cheap, fast test run.
   maxClips?: number;
+  // Defaults applied when the caller leaves the field out (MPT_DEFAULT_VIDEO_SOURCE,
+  // MPT_DEFAULT_VOICE_NAME): lets an operator pin a footage source or a voice that
+  // their MPT instance has credentials for, without the caller knowing about it.
+  defaultVideoSource?: string;
+  defaultVoiceName?: string;
   // Public origin of this server (the one a browser and a publisher can reach, for
   // example a tunnel). get_video builds the video URL from it; unset, get_video
   // answers a not_configured error and every other tool is unaffected.
@@ -107,6 +112,12 @@ export function registerProduceVideoTools(server: McpServer, deps: ProduceVideoD
     async (rawParams) =>
       callMpt(async () => {
         const params = { ...rawParams };
+        if (params.video_source === undefined && deps.defaultVideoSource) {
+          params.video_source = deps.defaultVideoSource;
+        }
+        if (params.voice_name === undefined && deps.defaultVoiceName) {
+          params.voice_name = deps.defaultVoiceName;
+        }
         if (deps.maxClips !== undefined) {
           if (rawParams.video_terms === undefined) {
             logger.warn(

@@ -7,7 +7,7 @@ dist/
 # OS
 .DS_Store
 
-# MoneyPrinterTurbo (monté dans le conteneur)
+# MoneyPrinterTurbo (mounted in the container)
 /config.toml
 /storage/
 /docker-compose.local.yml

@@ -37,7 +37,7 @@ function callToolRequest(name: string, args: Record<string, unknown>): RequestIn
 
 function testApp(mptClient: MptClient = fakeMptClient()) {
   return buildApp({
-    projectsByKey: { "mcp-secret": { name: "test-brand" } },
+    apiKey: "mcp-secret",
     mptBaseUrl: "http://mpt.local",
     mptApiKey: "mpt-secret",
     mptClient,
