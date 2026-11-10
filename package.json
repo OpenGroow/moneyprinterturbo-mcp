@@ -1,7 +1,10 @@
 {
   "name": "moneyprinterturbo-mcp",
-  "private": true,
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/OpenGroow/moneyprinterturbo-mcp.git"
+  },
   "type": "module",
   "packageManager": "pnpm@11.9.0",
   "scripts": {
